@@ -32,7 +32,7 @@ def crearPoblacionInicial(cantidad, numeroDeCiudades):
 
 '''
 Se define la función funcionDeOptimizacion(cromosoma) donde:
-    * cromosoma es el cromosoma de un individuo específico
+    * cromosoma es el cromosoma de un individuo específico (se debe cambiar en el cromosoma los índices por sus respectivas coordenadas de ciudades)
 Esta función calcula el valor de ajuste para un individuo
 '''
 def funcionDeOptimizacion(cromosoma):
