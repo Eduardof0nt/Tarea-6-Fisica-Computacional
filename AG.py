@@ -32,10 +32,11 @@ def crearPoblacionInicial(cantidad, numeroDeCiudades):
 
 '''
 Se define la función funcionDeOptimizacion(cromosoma) donde:
-    * cromosoma es el cromosoma de un individuo específico (se debe cambiar en el cromosoma los índices por sus respectivas coordenadas de ciudades)
+    * cromosoma es el cromosoma de un individuo específico
+    * CoordenadasCiudades es el arreglo que contiene las coordenadas de las ciudades
 Esta función calcula el valor de ajuste para un individuo
 '''
-def funcionDeOptimizacion(cromosoma):
+def funcionDeOptimizacion(cromosoma, CoordenadasCiudades):
     
     #Se define la variable distancia, el la cual se va a guardar el acumulado de las distancias euclidianas entre nodos adyacentes
     distancia = 0
@@ -44,7 +45,7 @@ def funcionDeOptimizacion(cromosoma):
     #Se comienza desde -1 ya que este índice indica a Numpy a tomar el último elemento. Esto permite realizar fácilmente el cálculo entre el último y el primer nodo, ya que se toma el nodo actual y el siguiente en la iteración para el cálculo
     for i in range(-1,len(cromosoma)-1):
         #Se calcula la distancia euclidiana y se suma a la variable distancia
-        distancia += np.sqrt(np.sum(np.power(cromosoma[i]-cromosoma[i+1],2)))
+        distancia += np.sqrt(np.sum(np.power(CoordenadasCiudades[cromosoma[i]]-CoordenadasCiudades[cromosoma[i+1]],2)))
     
     #Se calcula el inverso de la distnacia y se retorna el valor
     return 1/distancia
@@ -89,26 +90,20 @@ def InicializacionModificada(cantidad, CoordenadasCiudades):
     i = 0
     while i < cantidad:
         
-        #Se genera un arreglo con los índices de las ciudades (una lista de 0 hasta la cantidad de ciudades menos 1) y se toma un elemento como el nodo inicial
+        #Se genera un arreglo con los índices de las ciudades (una lista de 0 hasta la cantidad de ciudades menos 1) y se toma un elemento como el nodo inicial, eliminandolo del arreglo de posibles ciudades a elegir (ya que ya fue elegida)
         indiceCiudades = np.linspace(0, numeroDeCiudades-1,numeroDeCiudades).astype(int).tolist()
-        nodoInicial = np.random.randint(0,numeroDeCiudades)
+        nodoInicial = indiceCiudades.pop(np.random.randint(0,numeroDeCiudades))
         
         #Se inicia el arreglo en el cual se van a ingresar los índices de las ciudades en orden de cercanía y se ingresa el primer nodo
         individuoActual = []
         individuoActual.append(nodoInicial)
-        
-        #Se elimina el nodo inicial de la lista de índices de ciudades
-        for j in range(0,len(indiceCiudades)):
-            if indiceCiudades[j] == nodoInicial:
-                indiceCiudades.pop(j)
-                break
         
         #Se define la variable nodoPasado para guardar el valor del último índice ingresado para calcular en la siguiente iteración su ciudad más cercano
         nodoPasado = nodoInicial
         #Se continuan las iteraciones hasta que la lista de indiceCiudades esté vacía
         while len(indiceCiudades) > 0:
             #Se ordenan los indices dependiendo de la distancia entre las ciudades en orden ascendente
-            indiceCiudades.sort(key=lambda x: np.sqrt(np.sum(np.power(CoordenadasCiudades[x,:]-CoordenadasCiudades[nodoPasado,:],2))), reverse=False)
+            indiceCiudades.sort(key=lambda x: np.sqrt(np.sum(np.power(CoordenadasCiudades[x]-CoordenadasCiudades[nodoPasado],2))), reverse=False)
             #Se elimina primer elemento de la lista y se ingresa a la variable nodoPasado, este luego se agrega a la lista de la población actual
             nodoPasado = indiceCiudades.pop(0)
             individuoActual.append(nodoPasado)
@@ -122,7 +117,7 @@ def InicializacionModificada(cantidad, CoordenadasCiudades):
                 while indice1 == indice2:
                     indice1, indice2 = np.random.randint(0, len(individuoActual),2)
 
-                poblacionActual[indice1], poblacionActual[indice2] = individuoActual[indice2], individuoActual[indice1]
+                individuoActual[indice1], individuoActual[indice2] = individuoActual[indice2], individuoActual[indice1]
         
         #Se agrega el individuo generado a la lista de la población inicial
         poblacionInicial.append(individuoActual)
@@ -140,9 +135,9 @@ archivo = open('CoordenadasCiudades.txt')
 CoordenadasCiudades = []
 
 #Se definien los parámetros para la simulación
-tamañoDePoblacion = 10
-probabilidadDeMutacion = 1
-nIter = 100
+tamañoDePoblacion = 100
+probabilidadDeMutacion = 0.2
+nIter = 300
 
 #Se crea una lista para guardar los mejores individuos (los que lleguen a superar al mejor individuo guardado anterior) y otra para guardar los mejores individuos y los promedio de la función de ajuste de cada iteración
 mejorCamino = []
@@ -169,7 +164,7 @@ while n >= 0:
     #Se itera sobre la población para calcular el valor de ajuste de cada individuoy calcular el promedio generacional
     for i in range(0,len(caminos)):
         #Se guarda en la variable camino el camino en el índice actual y su valor de ajuste y se suma el valor de ajuste al acumulador
-        caminos[i] = (caminos[i],funcionDeOptimizacion(caminos[i]))
+        caminos[i] = (caminos[i],funcionDeOptimizacion(caminos[i],CoordenadasCiudades))
         promedioGeneracional += caminos[i][1]
     
     #Se divide la suma total de valores de ajuste entre el total de individuos para calcular el promedio generacional
@@ -221,8 +216,8 @@ ax.set_ylabel('y (m)')
 ax.set_title('Resultados de la Simulación')
 #Se muestra como primero de los mejores caminos encontrados (el peor de los mejores) como gráfico inicial
 ax.plot(coordenadasMejorCamino[0][:,0], coordenadasMejorCamino[0][:,1])
-ax.scatter(CoordenadasCiudades[:,0],CoordenadasCiudades[:,1],s=300,color='red')
-ax.scatter(coordenadasMejorCamino[0][0,0],coordenadasMejorCamino[0][0,1],s=300,color='green')
+ax.scatter(CoordenadasCiudades[:,0],CoordenadasCiudades[:,1],s=100,color='red')
+ax.scatter(coordenadasMejorCamino[0][0,0],coordenadasMejorCamino[0][0,1],s=100,color='green')
 
 #Se define un slider para controlar el mejor individuo encontrado (hasta el momento de su iteración) que se muestra
 axcolor = 'lightgoldenrodyellow'
